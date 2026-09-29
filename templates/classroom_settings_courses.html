@@ -1,0 +1,6 @@
+<section class="settings-section" id="courses">
+  <div><h2>课程与资源</h2><p>设置默认课程范围和任务完成行为。</p></div>
+  <div class="fields">
+    <div class="field"><label for="default_term_id">默认学期</label><select class="select" id="default_term_id" name="default_term_id"><option value="" {% if not settings.default_term_id %}selected{% endif %}>全部课程</option>{% for term in panel_context.terms %}<option value="{{ term.id }}" {% if settings.default_term_id == term.id %}selected{% endif %}>{{ term.year }} 第 {{ term.season }} 学期{% if term.current %}（当前）{% endif %}</option>{% endfor %}</select></div>
+  </div>
+</section>
