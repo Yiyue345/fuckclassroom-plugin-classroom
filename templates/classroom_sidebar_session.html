@@ -1,0 +1,5 @@
+{% set classroom_session_status = request.app.state.get_classroom_session_status() %}
+<a class="session-card" href="/accounts#classroom-session" data-sidebar-session="classroom" title="{% if classroom_session_status.is_logged_in %}已连接 · {{ classroom_session_status.saved_at or '会话已保存' }}{% else %}未登录{% endif %}">
+  <span class="session-dot{% if classroom_session_status.is_logged_in %} valid{% else %} invalid{% endif %}" data-session-indicator="classroom"></span>
+  <span><span class="session-title">课程录播</span><span class="session-meta" data-session-label="classroom">{% if classroom_session_status.is_logged_in %}已连接{% else %}未登录{% endif %}</span></span>
+</a>
