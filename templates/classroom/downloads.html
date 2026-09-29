@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set active_system = "classroom" %}
+{% set active_nav = "downloads" %}
+
+{% block title %}文件管理 · 学业助手{% endblock %}
+{% block page_title %}文件管理{% endblock %}
+
+{% block content %}
+  <div class="page-head"><div><h1>文件管理</h1><p class="page-description">管理已下载的课件、平台转写和本地提取结果。</p></div><div class="head-actions"><span class="status blue" data-download-file-count>{{ files|length }} 个文件</span></div></div>
+
+  {% if deleted %}<div class="notice success"><svg class="icon"><use href="/static/icons.svg#circle-check"></use></svg><span>文件已删除。</span></div>{% endif %}
+  {% if delete_error %}<div class="notice error"><svg class="icon"><use href="/static/icons.svg#circle-alert"></use></svg><span>删除失败：{{ delete_error }}</span></div>{% endif %}
+
+  <div class="toolbar">
+    <div class="toolbar-left"><div class="search"><svg class="icon"><use href="/static/icons.svg#search"></use></svg><input class="input" type="search" placeholder="搜索文件或路径" data-filter-input="#download-table"></div></div>
+    <div class="toolbar-right">
+      <span class="section-meta" data-download-selection-summary data-default-label="打开的是本地原文件，不会重复下载">打开的是本地原文件，不会重复下载</span>
+      <button class="btn small danger" type="button" data-download-delete-selected disabled><svg class="icon small"><use href="/static/icons.svg#trash-2"></use></svg>删除所选</button>
+    </div>
+  </div>
+
+  <div class="table-wrap" id="download-table" data-download-library data-delete-endpoint="/downloads/delete-many">
+    <table class="download-table">
+      <thead><tr><th class="download-select-cell"><input class="download-checkbox" type="checkbox" data-download-select-all title="选择当前可见文件" aria-label="选择当前可见文件"></th><th>文件</th><th>大小</th><th>更新时间</th><th></th></tr></thead>
+      <tbody>
+        {% for file in files %}
+          <tr data-filter-row data-download-row>
+            <td class="download-select-cell"><input class="download-checkbox" type="checkbox" value="{{ file.relative_path }}" data-download-select aria-label="选择 {{ file.name }}"></td>
+            <td><div class="table-title">{{ file.name }}</div><div class="table-subtitle mono">{{ file.relative_path }}</div></td>
+            <td>{{ file.size_label }}</td>
+            <td>{{ file.updated_at }}</td>
+            <td class="actions-cell">
+              <span class="actions" style="justify-content:flex-end">
+                <form method="post" action="/downloads/local/open" data-local-file-action="打开文件" data-file-name="{{ file.name }}"><input type="hidden" name="relative_path" value="{{ file.relative_path }}"><button class="btn small" type="submit"><svg class="icon small"><use href="/static/icons.svg#external-link"></use></svg>打开</button></form>
+                <form method="post" action="/downloads/local/reveal" data-local-file-action="在文件夹中显示" data-file-name="{{ file.name }}"><input type="hidden" name="relative_path" value="{{ file.relative_path }}"><button class="btn small icon-only" type="submit" title="在文件夹中打开" aria-label="在文件夹中打开 {{ file.name }}"><svg class="icon small"><use href="/static/icons.svg#folder"></use></svg></button></form>
+                <form method="post" action="/downloads/delete" data-confirm="确认删除 {{ file.name }}？"><input type="hidden" name="relative_path" value="{{ file.relative_path }}"><button class="btn small danger icon-only" type="submit" title="删除"><svg class="icon small"><use href="/static/icons.svg#trash-2"></use></svg></button></form>
+              </span>
+            </td>
+          </tr>
+        {% else %}<tr data-download-empty><td class="table-empty" colspan="5">还没有下载文件</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
