@@ -1,0 +1,24 @@
+{
+  "id": "classroom",
+  "name": "课程录播",
+  "version": "0.1.0",
+  "api_version": 1,
+  "app_requires": ">=0.1,<0.3",
+  "description": "FuckClassroom 课程录播插件，提供课程、直播、回放、PPT、下载与会话基础能力。",
+  "requires": [
+    "core_ui"
+  ],
+  "python_requires": [
+    {
+      "requirement": "playwright>=1.45",
+      "import": "playwright",
+      "label": "Playwright",
+      "optional": false
+    }
+  ],
+  "execution": "in_process",
+  "entry": "plugin.py",
+  "route_prefix": null,
+  "rpc_api_version": null,
+  "rpc_permissions": []
+}
