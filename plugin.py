@@ -46,7 +46,7 @@ def build_plugin() -> PluginSpec:
     return PluginSpec(
         id="classroom",
         ui_assets=(
-            UIAsset("downloads.js?v=20260921-1", pages=("downloads", "lesson_outputs")),
+            UIAsset("downloads.js?v=20260928-1", pages=("downloads", "lesson_outputs")),
             UIAsset("/static/vendor/hls.min.js?v=1.7.3", pages=("course_detail",)),
             UIAsset("course_media.css?v=20260922-1", "style", ("course_detail",)),
             UIAsset("course_media_fit.css?v=20260922-1", "style", ("course_detail",)),
