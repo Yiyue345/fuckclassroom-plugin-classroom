@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 from dataclasses import asdict
 
-from fuckclassroom.classroom import ClassroomClient, Course, Term
+from .client import ClassroomClient, Course, Term
 from fuckclassroom.core.config import AppConfig
 
 
