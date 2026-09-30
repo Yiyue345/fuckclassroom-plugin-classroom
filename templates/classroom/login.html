@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% set active_system = "classroom" %}
+{% set active_nav = "overview" %}
+
+{% block title %}课程录播 · 学业助手{% endblock %}
+{% block page_title %}概览{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <div>
+      <h1>课程录播</h1>
+      <p class="page-description">最近课程、下载文件和文字提取任务集中在这里。</p>
+    </div>
+    <div class="head-actions">
+      <a class="btn" href="/accounts"><svg class="icon"><use href="/static/icons.svg#shield-check"></use></svg>账户与认证</a>
+      <a class="btn primary" href="/courses">浏览全部课程</a>
+    </div>
+  </div>
+
+  {% if course_error %}<div class="notice error"><svg class="icon"><use href="/static/icons.svg#circle-alert"></use></svg><span>{{ course_error }}</span></div>{% endif %}
+  {% if live_error %}<div class="notice warning"><svg class="icon"><use href="/static/icons.svg#circle-alert"></use></svg><span>直播状态暂时无法更新：{{ live_error }}</span></div>{% endif %}
+
+  {% if live_lessons %}
+    <section class="live-now-section" aria-labelledby="live-now-heading">
+      <div class="section-head">
+        <div class="live-now-heading"><span class="live-pulse" aria-hidden="true"></span><h2 id="live-now-heading">正在直播</h2><span class="status red">{{ live_lessons|length }} 门</span></div>
+        <span class="section-meta">直播画面与 PPT 将同步更新</span>
+      </div>
+      <div class="live-now-list">
+        {% for live in live_lessons %}
+          <a class="live-now-card" href="/courses/{{ live.course_id }}?lesson={{ live.lesson_id }}#media">
+            <span class="live-now-icon" aria-hidden="true">
+              <svg class="icon"><use href="/static/icons.svg#play"></use></svg>
+              <span class="live-now-icon-dot"></span>
+            </span>
+            <div class="live-now-body">
+              <div class="live-now-kicker"><span class="status red"><span class="tiny-dot"></span>直播中</span><span>课程直播</span></div>
+              <h3 class="live-now-course">{{ live.course_title }}</h3>
+              <div class="live-now-lesson">{{ live.lesson_title }}</div>
+              <div class="live-now-meta">
+                <span>{{ live.lecturer or "教师未公布" }}</span>
+                {% if live.room_name %}<span>{{ live.room_name }}</span>{% endif %}
+                {% if live.start_at %}<span>{{ live.start_at[11:] }} 开始</span>{% endif %}
+              </div>
+            </div>
+            <div class="live-now-side">
+              <span class="live-now-ppt"><svg class="icon small"><use href="/static/icons.svg#presentation"></use></svg>实时 PPT</span>
+              <span class="btn primary small">进入直播 <span aria-hidden="true">→</span></span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="stat-band">
+    <div class="stat"><div class="stat-label">当前课程</div><div class="stat-value">{{ courses|length }}</div><div class="stat-foot">{% if live_lessons %}其中 {{ live_lessons|length }} 门正在直播{% else %}按默认学期加载{% endif %}</div></div>
+    <div class="stat"><div class="stat-label">本地文件</div><div class="stat-value">{{ files|length }}</div><div class="stat-foot">课件、转写与提取结果</div></div>
+    <div class="stat"><div class="stat-label">进行中任务</div><div class="stat-value">{{ running_task_count }}</div><div class="stat-foot">OCR、总结或资源刷新</div></div>
+    <div class="stat"><div class="stat-label">最近完成</div><div class="stat-value">{{ completed_task_count }}</div><div class="stat-foot">本次运行期间</div></div>
+  </section>
+
+  <div class="section dashboard-grid">
+    <section>
+      <div class="section-head"><h2>最近课程</h2><a class="link-button" href="/courses">查看全部 <span>→</span></a></div>
+      <div class="surface list recent-table">
+        <div class="list-header"><span>课程</span><span>教师</span><span>时间</span><span></span></div>
+        {% for course in courses[:4] %}
+          <a class="list-row" href="/courses/{{ course.id }}">
+            <div><div class="row-title">{{ course.title }}</div><div class="row-sub">{{ course.type }} · {{ course.model }}</div></div>
+            <div class="cell">{{ course.teacher or "未知教师" }}</div>
+            <div class="cell">{{ course.start_at or "未公布" }}</div>
+            <div class="cell action"><span class="link-button">查看</span></div>
+          </a>
+        {% else %}
+          <div class="empty-state"><div><svg class="icon"><use href="/static/icons.svg#book-open"></use></svg><p>{% if session.is_logged_in %}暂无课程数据{% else %}登录后显示课程{% endif %}</p></div></div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><h2>任务与结果</h2><a class="link-button" href="/tasks">任务中心 <span>→</span></a></div>
+      <div class="surface task-stack">
+        {% for task in recent_tasks %}
+          <a class="task-item" href="/tasks/{{ task.id }}">
+            <div class="task-top">
+              <div><div class="task-title">{{ task.title }}</div><div class="task-meta">{{ task.message }} · {{ task.updated_at }}</div></div>
+              {% if task.status == "succeeded" %}<span class="status green">已完成</span>{% elif task.status == "failed" %}<span class="status red">失败</span>{% elif task.status == "cancelled" %}<span class="status gray">已取消</span>{% elif task.status == "cancel_requested" or task.cancel_requested %}<span class="status blue">取消中</span>{% else %}<span class="status blue">进行中 {{ task.progress }}%</span>{% endif %}
+            </div>
+            {% if task.status == "running" %}<div class="progress"><span style="width: {{ task.progress }}%"></span></div>{% endif %}
+          </a>
+        {% else %}
+          <div class="empty-state"><div><svg class="icon"><use href="/static/icons.svg#list-todo"></use></svg><p>暂时没有任务</p></div></div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+{% endblock %}

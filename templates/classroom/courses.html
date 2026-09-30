@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% set active_system = "classroom" %}
+{% set active_nav = "courses" %}
+
+{% block title %}我的课程 · 学业助手{% endblock %}
+{% block page_title %}我的课程{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <div><h1>我的课程</h1><p class="page-description">按学期浏览课程，并进入课次查看回放、课件和提取结果。</p></div>
+    <div class="head-actions"><a class="btn" href="/settings#courses"><svg class="icon"><use href="/static/icons.svg#settings"></use></svg>课程设置</a></div>
+  </div>
+
+  {% if error %}<div class="notice error"><svg class="icon"><use href="/static/icons.svg#circle-alert"></use></svg><span>{{ error }}</span></div>{% endif %}
+  {% if term_error %}<div class="notice error"><svg class="icon"><use href="/static/icons.svg#circle-alert"></use></svg><span>{{ term_error }}</span></div>{% endif %}
+
+  {% if not error %}
+    <form class="toolbar" method="get" action="/courses">
+      <div class="toolbar-left">
+        <div class="search"><svg class="icon"><use href="/static/icons.svg#search"></use></svg><input class="input" type="search" placeholder="搜索课程或教师" data-filter-input="#course-list"></div>
+        <select class="select" name="term_id" style="width: 230px">
+          <option value="" {% if not selected_term_id %}selected{% endif %}>全部学期</option>
+          {% for term in terms %}
+            <option value="{{ term.id }}" {% if selected_term_id == term.id %}selected{% endif %}>{{ term.year }} 第 {{ term.season }} 学期{% if term.current %}（当前）{% endif %}</option>
+          {% endfor %}
+        </select>
+        <button class="btn" type="submit">应用筛选</button>
+      </div>
+      <div class="toolbar-right"><span class="section-meta">共 {{ courses|length }} 门课程</span></div>
+    </form>
+
+    <section class="surface list course-table" id="course-list">
+      <div class="list-header"><span>课程</span><span>教师</span><span>课程时间</span><span>类型</span><span></span></div>
+      {% for course in courses %}
+        <div class="list-row" data-filter-row>
+          <div><div class="row-title">{{ course.title }}</div><div class="row-sub">{{ course.model or "普通课程" }}</div></div>
+          <div class="cell"><strong>{{ course.teacher or "未知教师" }}</strong></div>
+          <div class="cell">{{ course.start_at or "未公布" }}{% if course.end_at %}<div class="row-sub">至 {{ course.end_at }}</div>{% endif %}</div>
+          <div class="cell"><span class="status gray">{{ course.type or "课程" }}</span></div>
+          <div class="cell action"><a class="btn small primary" href="/courses/{{ course.id }}">查看资源</a></div>
+        </div>
+      {% else %}
+        <div class="empty-state"><div><svg class="icon"><use href="/static/icons.svg#book-open"></use></svg><p>当前筛选条件下没有课程</p></div></div>
+      {% endfor %}
+    </section>
+  {% endif %}
+{% endblock %}

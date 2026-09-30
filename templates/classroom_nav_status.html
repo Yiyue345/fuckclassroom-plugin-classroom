@@ -1,0 +1,4 @@
+{% set classroom_session_status = request.app.state.get_classroom_session_status() %}
+<span class="nav-label-status" title="{% if classroom_session_status.is_logged_in %}已连接{% else %}未登录{% endif %}">
+  <span class="session-dot{% if classroom_session_status.is_logged_in %} valid{% else %} invalid{% endif %}" data-session-indicator="classroom"></span>
+</span>

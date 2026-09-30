@@ -1,0 +1,26 @@
+<article class="surface account-session-panel" id="classroom-session">
+      <header class="account-session-header">
+        <div class="account-session-name">
+          <span class="workspace-icon"><svg class="icon"><use href="/static/icons.svg#book-open"></use></svg></span>
+          <div><h2>课程录播</h2><span>课堂录像、课件与课程资源</span></div>
+        </div>
+        <span class="status {% if account.session.is_logged_in %}green{% else %}red{% endif %}"><span class="tiny-dot"></span>{{ "已连接" if account.session.is_logged_in else "未登录" }}</span>
+      </header>
+
+      <div class="session-state">
+        <span class="session-dot {% if account.session.is_logged_in %}valid{% else %}invalid{% endif %}"></span>
+        <div><strong>{{ account.session.message }}</strong><span>{{ account.login_run.message }}</span></div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item"><label>保存时间</label><strong>{{ account.session.saved_at or "无" }}</strong></div>
+        <div class="detail-item"><label>Cookie 数量</label><strong>{{ account.session.cookie_count }}</strong></div>
+        <div class="detail-item detail-wide"><label>最后页面</label><strong title="{{ account.session.final_url or '' }}">{{ account.session.final_url or "无" }}</strong></div>
+      </div>
+
+      <div class="account-session-actions">
+        <form method="post" action="/auth/start" data-inline-task data-session-login="classroom" data-task-status="#account-task-status" data-task-group="account-auth" data-task-starting="正在打开课程录播登录窗口" data-task-fallback="课程录播登录失败" data-task-success="课程录播登录完成"><button class="btn primary" type="submit" data-task-submit><svg class="icon"><use href="/static/icons.svg#log-in"></use></svg>登录</button></form>
+        <form method="post" action="/auth/verify" data-inline-task data-task-status="#account-task-status" data-task-group="account-auth" data-task-starting="正在验证课程录播会话" data-task-fallback="课程录播验证失败" data-task-success="课程录播会话已更新"><button class="btn" type="submit" data-task-submit><svg class="icon"><use href="/static/icons.svg#shield-check"></use></svg>验证会话</button></form>
+        <form method="post" action="/auth/logout" data-confirm="确认清除课程录播登录会话？"><button class="btn danger" type="submit"><svg class="icon"><use href="/static/icons.svg#log-out"></use></svg>清除会话</button></form>
+      </div>
+    </article>

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% set ui_page = "course_detail" %}
+{% set active_system = "classroom" %}
+{% set active_nav = "courses" %}
+
+{% block title %}{{ detail.course.title if detail else "课程资源" }} · 学业助手{% endblock %}
+{% block breadcrumb_parent %}<a href="/courses">我的课程</a>{% endblock %}
+{% block page_title %}{{ detail.course.title if detail else "课程资源" }}{% endblock %}
+
+{% block content %}
+  {% set plugin_registry = request.app.state.plugin_registry %}
+  <div class="page-head">
+    <div>
+      <h1>{{ detail.course.title if detail else "课程资源" }}</h1>
+      {% if detail %}<p class="page-description">{{ detail.course.teacher or "未知教师" }} · {{ detail.course.type }} · {{ detail.course.model }}</p>{% endif %}
+    </div>
+    <div class="head-actions">
+      <a class="btn" href="/courses"><svg class="icon"><use href="/static/icons.svg#arrow-left"></use></svg>返回课程</a>
+      <form method="post" action="/courses/{{ detail.course.id if detail else course_id }}/refresh"><button class="btn" type="submit"><svg class="icon"><use href="/static/icons.svg#refresh-cw"></use></svg>刷新资源</button></form>
+    </div>
+  </div>
+
+  {% if refreshed %}<div class="notice success"><svg class="icon"><use href="/static/icons.svg#circle-check"></use></svg><span>课程资源已刷新。</span></div>{% endif %}
+  {% if refresh_error %}<div class="notice error"><svg class="icon"><use href="/static/icons.svg#circle-alert"></use></svg><span>刷新失败：{{ refresh_error }}</span></div>{% endif %}
+  {% if error %}<div class="notice error"><svg class="icon"><use href="/static/icons.svg#circle-alert"></use></svg><span>{{ error }}</span></div>{% endif %}
+
+  <div class="notice inline-task-status hidden" id="course-task-status" role="status" aria-live="polite">
+    <svg class="icon"><use href="/static/icons.svg#refresh-cw"></use></svg>
+    <div class="inline-task-body">
+      <div class="inline-task-message" data-task-message>正在准备文字提取</div>
+      <div class="progress" aria-hidden="true"><span data-task-progress></span></div>
+    </div>
+  </div>
+
+  {% if detail %}
+    {% set counts = namespace(replay=0, ppt=0, transcript=0, live=0) %}
+    {% for lesson in detail.lessons %}
+      {% if lesson.is_live %}{% set counts.live = counts.live + 1 %}{% endif %}
+      {% for resource in lesson.resources %}
+        {% if resource.kind == "video" %}{% set counts.replay = counts.replay + 1 %}
+        {% elif resource.kind == "ppt" %}{% set counts.ppt = counts.ppt + 1 %}
+        {% elif resource.kind == "transcript" %}{% set counts.transcript = counts.transcript + 1 %}{% endif %}
+      {% endfor %}
+    {% endfor %}
+
+    <section class="surface course-summary-surface">
+      <div class="course-summary">
+        <div>
+          <h2>课程资源</h2>
+          <div class="summary-meta"><span>{{ detail.lessons|length }} 个课次</span>{% if counts.live %}<span class="live-summary-text">{{ counts.live }} 个正在直播</span>{% endif %}<span>{{ counts.replay }} 个回放</span><span>{{ counts.ppt }} 份课件</span><span>{{ counts.transcript }} 份平台转写</span></div>
+        </div>
+        <span class="status green"><span class="tiny-dot"></span>进入页面时已同步</span>
+      </div>
+    </section>
+
+    <section class="course-media-workspace" id="media" data-course-media-workspace>
+      <div class="course-media-context">
+        <div>
+          <span class="course-media-context-label">当前课次</span>
+          <strong data-current-lesson>选择下方课次开始学习</strong>
+        </div>
+        <span class="course-media-hint">点击课次可同步切换录像、直播与课件</span>
+      </div>
+
+      <div class="course-media-grid">
+        <section class="course-media-card course-video-card" data-video-card>
+          <header class="course-media-card-header">
+            <div class="course-media-card-title"><svg class="icon"><use href="/static/icons.svg#play"></use></svg><h2 data-video-title>课堂录像</h2><span class="status red hidden" data-live-badge><span class="tiny-dot"></span>直播中</span></div>
+            <a class="btn small disabled" href="#" target="_blank" rel="noreferrer" aria-disabled="true" tabindex="-1" data-video-external><svg class="icon small"><use href="/static/icons.svg#external-link"></use></svg>新窗口打开</a>
+          </header>
+          <div class="inline-video-stage">
+            <video class="hidden" controls playsinline preload="metadata" data-course-video></video>
+            <div class="course-media-empty" data-video-empty>
+              <svg class="icon"><use href="/static/icons.svg#play"></use></svg>
+              <strong>选择一个课次</strong>
+              <span>课堂录像会直接在这里播放</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="course-media-card course-ppt-card" data-ppt-card>
+          <header class="course-media-card-header">
+            <div class="course-media-card-title"><svg class="icon"><use href="/static/icons.svg#presentation"></use></svg><h2>PPT 课件</h2><span class="status blue hidden" data-ppt-source></span></div>
+            <div class="course-media-card-actions">
+              <a class="btn small disabled" href="#" aria-disabled="true" tabindex="-1" data-ppt-download><svg class="icon small"><use href="/static/icons.svg#download"></use></svg>下载原文件</a>
+              <button class="btn small" type="button" disabled data-ppt-fullscreen><svg class="icon small"><use href="/static/icons.svg#presentation"></use></svg>全屏查看</button>
+            </div>
+          </header>
+          <div class="inline-ppt-stage" data-ppt-stage>
+            <div class="ppt-status empty" data-ppt-status>
+              <svg class="icon"><use href="/static/icons.svg#presentation"></use></svg>
+              <strong>选择一个课次</strong>
+              <span>PPT 课件会直接在这里打开</span>
+            </div>
+          </div>
+          <footer class="inline-ppt-toolbar">
+            <button class="btn small" type="button" disabled data-ppt-prev><svg class="icon small"><use href="/static/icons.svg#arrow-left"></use></svg>上一页</button>
+            <span class="ppt-counter" data-ppt-counter>0 / 0</span>
+            <button class="btn small" type="button" disabled data-ppt-next>下一页<svg class="icon small next-icon"><use href="/static/icons.svg#arrow-left"></use></svg></button>
+          </footer>
+        </section>
+      </div>
+    </section>
+
+    <section class="surface course-lessons-surface">
+      <div class="course-lessons-heading">
+        <div>
+          <h2>课次列表</h2>
+          <p>选择课次后，上方录像、直播与 PPT 会同步切换；直播中的 PPT 会自动跟随教师更新。</p>
+        </div>
+      </div>
+      <div class="lesson-list course-media-lesson-list">
+        <div class="lesson-head"><span>课次</span><span>课堂</span><span>转写</span><span>状态</span><span></span></div>
+        {% for lesson in detail.lessons %}
+          {% set media = namespace(video_url="", ppt_url="") %}
+          {% for resource in lesson.resources %}
+            {% if resource.kind == "video" and resource.is_downloadable and not media.video_url %}{% set media.video_url = resource.url %}{% endif %}
+            {% if resource.kind == "ppt" and resource.is_downloadable and not media.ppt_url %}{% set media.ppt_url = "/courses/" ~ detail.course.id ~ "/lessons/" ~ lesson.id ~ "/download/ppt" %}{% endif %}
+          {% endfor %}
+          <article class="lesson-row course-lesson-row{% if lesson.is_live %} is-live{% endif %}" tabindex="0" aria-current="false" data-lesson-row data-lesson-index="{{ loop.index }}" data-lesson-id="{{ lesson.id }}" data-lesson-title="{{ lesson.title }}" data-video-url="{{ media.video_url }}" data-ppt-url="{{ media.ppt_url }}" data-live="{{ 'true' if lesson.is_live else 'false' }}" data-live-info-url="/api/courses/{{ detail.course.id }}/lessons/{{ lesson.id }}/live" data-ppt-slides-url="/api/courses/{{ detail.course.id }}/lessons/{{ lesson.id }}/ppt/slides" data-live-ppt-url="/api/courses/{{ detail.course.id }}/lessons/{{ lesson.id }}/live/ppt">
+            <div class="lesson-number">{{ "%02d"|format(loop.index) }}</div>
+            <div><div class="row-title">{{ lesson.title }}</div><div class="row-sub">{{ lesson.start_at or "时间未公布" }}{% if lesson.lecturer or detail.course.teacher %} · {{ lesson.lecturer or detail.course.teacher }}{% endif %}{% if lesson.room_name %} · {{ lesson.room_name }}{% endif %}{% if lesson.duration_seconds %} · {{ lesson.duration_seconds // 60 }} 分钟{% endif %}</div></div>
+            <div class="resource-line">
+              {% if lesson.is_live %}
+                <span class="resource-chip ready"><svg class="icon small"><use href="/static/icons.svg#presentation"></use></svg>实时 PPT</span>
+              {% else %}
+                {% for contribution in plugin_registry.slot_templates("classroom.lesson.transcript") %}{% include contribution %}{% else %}<span class="muted">暂无转写</span>{% endfor %}
+              {% endif %}
+            </div>
+            <div>
+              {% if lesson.is_live %}<span class="status red"><span class="tiny-dot"></span>直播中</span>{% elif lesson.status_label %}<span class="status {% if '完成' in lesson.status_label or '结束' in lesson.status_label %}green{% else %}gray{% endif %}">{{ lesson.status_label }}</span>{% else %}<span class="status gray">状态未知</span>{% endif %}
+            </div>
+            <div class="lesson-actions">
+              {% if lesson.is_live %}<button class="btn primary small course-play-button" type="button" data-lesson-play><svg class="icon small"><use href="/static/icons.svg#play"></use></svg>进入直播</button>{% elif media.video_url %}<button class="btn small course-play-button" type="button" data-lesson-play><svg class="icon small"><use href="/static/icons.svg#play"></use></svg>播放</button>{% endif %}
+              {% for contribution in plugin_registry.slot_templates("classroom.lesson.actions") %}{% include contribution %}{% endfor %}
+            </div>
+          </article>
+        {% else %}<div class="empty-state"><div><svg class="icon"><use href="/static/icons.svg#book-open"></use></svg><p>暂无课次</p></div></div>{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
