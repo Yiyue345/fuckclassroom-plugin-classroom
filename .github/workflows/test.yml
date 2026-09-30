@@ -46,7 +46,15 @@ jobs:
           )
 
       - name: Check Python syntax
-        run: python -m compileall -q __init__.py plugin.py accounts.py lifecycle.py routes.py services.py settings_context.py worker.py scripts/build_registry_artifact.py
+        run: python -m compileall -q __init__.py plugin.py accounts.py lifecycle.py routes.py services.py settings_context.py worker.py client.py semester_sync.py downloads.py scripts/build_registry_artifact.py
+
+      - name: Reject host Classroom implementation imports
+        shell: bash
+        run: |
+          if grep -REn 'fuckclassroom\.classroom' --include='*.py' . --exclude-dir=.git; then
+            echo "Standalone classroom plugin must own its Classroom implementation" >&2
+            exit 1
+          fi
 
       - name: Reject package-level host relative imports
         shell: bash
@@ -63,6 +71,9 @@ jobs:
           test -f templates/classroom/course_detail.html
           test -f static/classroom.css
           test -f static/course_media.js
+          test -f client.py
+          test -f semester_sync.py
+          test -f downloads.py
 
       - name: Smoke-build Registry v1 artifact
         shell: bash
