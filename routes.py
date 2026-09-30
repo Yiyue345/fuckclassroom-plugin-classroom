@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 
-from fuckclassroom.classroom import ClassroomClientError, CourseDetail, rewrite_live_playlist
+from .client import ClassroomClientError, CourseDetail, rewrite_live_playlist
 
 
 def _run_for_result(operation, result_url: str) -> str:
