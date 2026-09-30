@@ -2,6 +2,13 @@
   const ui = window.FuckClassroomUI;
   if (!ui) return;
   const { readResponseError, showToast } = ui;
+  const pageRuntime = window.FuckClassroomPage?.current?.();
+  const pageSignal = pageRuntime?.signal;
+  const schedule = pageRuntime?.setTimeout
+    ? (callback, delay) => pageRuntime.setTimeout(callback, delay)
+    : (callback, delay) => window.setTimeout(callback, delay);
+  const disposed = () => Boolean(pageSignal?.aborted);
+  const pageFetch = (input, init = {}) => window.fetch(input, { ...init, signal: pageSignal });
   document.querySelectorAll("form[data-local-file-action]").forEach((form) => {
     const submitButton = form.querySelector("button[type='submit']");
     if (!submitButton) return;
@@ -14,21 +21,24 @@
       form.setAttribute("aria-busy", "true");
       submitButton.disabled = true;
       try {
-        const response = await fetch(form.action, {
+        const response = await pageFetch(form.action, {
           method: "POST",
           body: new URLSearchParams(new FormData(form)),
           headers: { Accept: "application/json" },
         });
         if (!response.ok) throw new Error(await readResponseError(response, actionLabel + "失败"));
         const payload = await response.json();
+        if (disposed()) return;
         showToast(actionLabel + "成功", payload.message || fileName);
       } catch (error) {
+        if (disposed() || error?.name === "AbortError") return;
         showToast(
           actionLabel + "未完成",
           error && error.message ? error.message : actionLabel + "失败",
           true
         );
       } finally {
+        if (disposed()) return;
         form.dataset.running = "false";
         form.removeAttribute("aria-busy");
         submitButton.disabled = false;
@@ -80,7 +90,7 @@
     });
 
     const filterInput = document.querySelector(`[data-filter-input="#${library.id}"]`);
-    filterInput?.addEventListener("input", () => window.setTimeout(renderDownloadSelection, 0));
+    filterInput?.addEventListener("input", () => schedule(renderDownloadSelection, 0));
 
     deleteButton.addEventListener("click", async () => {
       const selected = selectedRows();
@@ -95,13 +105,14 @@
       deleteButton.dataset.running = "true";
       renderDownloadSelection();
       try {
-        const response = await fetch(library.dataset.deleteEndpoint || "/downloads/delete-many", {
+        const response = await pageFetch(library.dataset.deleteEndpoint || "/downloads/delete-many", {
           method: "POST",
           body: requestBody,
           headers: { Accept: "application/json" },
         });
         if (!response.ok) throw new Error(await readResponseError(response, "批量删除失败"));
         const payload = await response.json();
+        if (disposed()) return;
         selected.forEach((row) => row.remove());
         const remainingCount = rows().length;
         if (!remainingCount) {
@@ -113,12 +124,14 @@
         if (fileCount) fileCount.textContent = `${remainingCount} 个文件`;
         showToast("批量删除完成", payload.message || `已删除 ${selected.length} 个文件`);
       } catch (error) {
+        if (disposed() || error?.name === "AbortError") return;
         showToast(
           "批量删除未完成",
           error && error.message ? error.message : "批量删除失败",
           true
         );
       } finally {
+        if (disposed()) return;
         deleteButton.dataset.running = "false";
         renderDownloadSelection();
       }
