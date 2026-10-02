@@ -18,7 +18,7 @@ FuckClassroom 的独立课程录播插件，插件 ID 为 `classroom`。
 - Required host plugin: `core_ui`
 - Python dependency: `playwright>=1.45`
 
-当前版本仍复用 FuckClassroom 宿主提供的 `fuckclassroom.classroom`、认证、Plugin Process Host 等稳定兼容层；业务插件代码本身已从主仓插件包层级中拆出。
+当前插件已经自带 `ClassroomClient`、课程/课次领域模型、学期同步与下载库实现，不再依赖宿主的 `fuckclassroom.classroom` 包；仍复用宿主提供的认证、Plugin API 与 Plugin Process Host 等稳定基础能力。
 
 ## 开发
 

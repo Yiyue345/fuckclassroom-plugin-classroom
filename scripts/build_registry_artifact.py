@@ -26,6 +26,9 @@ ROOT_FILES = (
     "services.py",
     "settings_context.py",
     "worker.py",
+    "client.py",
+    "semester_sync.py",
+    "downloads.py",
     "requirements.txt",
     "README.md",
 )

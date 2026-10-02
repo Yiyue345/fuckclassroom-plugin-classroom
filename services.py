@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from fuckclassroom.auth import LoginSessionService
-from fuckclassroom.classroom import (
+from .client import (
     ClassroomClientError,
     Course,
     CourseDetail,
@@ -17,10 +17,10 @@ from fuckclassroom.classroom import (
     LiveLesson,
     LiveLessonInfo,
     LivePptSlide,
-    SemesterSyncService,
     Term,
 )
-from fuckclassroom.classroom.downloads import DownloadLibrary
+from .downloads import DownloadLibrary
+from .semester_sync import SemesterSyncService
 from fuckclassroom.core.plugins import PluginContext
 from fuckclassroom.plugins.process_runtime import ProcessPluginError, ProcessPluginHost
 from fuckclassroom.plugins.rpc import PLUGIN_RPC_API_VERSION
